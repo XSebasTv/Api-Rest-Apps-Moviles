@@ -1,4 +1,5 @@
 const Personaje = require('../models/personajes.model');
+const Ciudad = require('../models/ciudades.model');
 
 // Crear un personaje
 const crearPersonaje = async (req, res) => {
@@ -23,7 +24,10 @@ const crearPersonaje = async (req, res) => {
 // Obtener todos los personajes
 const obtenerPersonajes = async (req, res) => {
     try {
-        const personajes = await Personaje.find().populate('ciudad', 'nombre');
+        const personajes = await Personaje.find().populate({
+            path: 'ciudad',
+            populate: { path: 'pais', select: 'nombre codigo continente' }
+        });
         res.status(200).json(personajes);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -33,11 +37,46 @@ const obtenerPersonajes = async (req, res) => {
 // Obtener un personaje por ID
 const obtenerPersonaje = async (req, res) => {
     try {
-        const personaje = await Personaje.findById(req.params.id).populate('ciudad', 'nombre');
+        const personaje = await Personaje.findById(req.params.id).populate({
+            path: 'ciudad',
+            populate: { path: 'pais', select: 'nombre codigo continente' }
+        });
         if (!personaje) {
             return res.status(404).json({ message: 'Personaje no encontrado' });
         }
         res.status(200).json(personaje);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Obtener personajes por ciudad
+const obtenerPersonajesPorCiudad = async (req, res) => {
+    try {
+        const { idCiudad } = req.params;
+        const personajes = await Personaje.find({ ciudad: idCiudad }).populate({
+            path: 'ciudad',
+            populate: { path: 'pais', select: 'nombre codigo continente' }
+        });
+        res.status(200).json(personajes);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Obtener personajes por país
+const obtenerPersonajesPorPais = async (req, res) => {
+    try {
+        const { idPais } = req.params;
+        // Busca todas las ciudades del país
+        const ciudades = await Ciudad.find({ pais: idPais }).select('_id');
+        const ciudadesIds = ciudades.map(c => c._id);
+        // Busca personajes cuya ciudad esté en esas ciudades
+        const personajes = await Personaje.find({ ciudad: { $in: ciudadesIds } }).populate({
+            path: 'ciudad',
+            populate: { path: 'pais', select: 'nombre codigo continente' }
+        });
+        res.status(200).json(personajes);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -87,5 +126,7 @@ module.exports = {
     obtenerPersonajes,
     obtenerPersonaje,
     actualizarPersonaje,
-    eliminarPersonaje
+    eliminarPersonaje,
+    obtenerPersonajesPorCiudad,
+    obtenerPersonajesPorPais
 };

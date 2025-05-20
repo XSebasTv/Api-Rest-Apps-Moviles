@@ -1,4 +1,5 @@
 const Famoso = require('../models/famosos.model');
+const Ciudad = require('../models/ciudades.model');
 
 // Crear un famoso
 const crearFamoso = async (req, res) => {
@@ -53,6 +54,40 @@ const obtenerFamoso = async (req, res) => {
     }
 };
 
+// Obtener famosos por ciudad
+const obtenerFamososPorCiudad = async (req, res) => {
+    try {
+        const { idCiudad } = req.params;
+        const famosos = await Famoso.find({ ciudad: idCiudad })
+            .populate({
+                path: 'ciudad',
+                populate: { path: 'pais', select: 'nombre codigo continente' }
+            });
+        res.json(famosos);
+    } catch (error) {
+        res.status(500).json({ msg: 'Error al obtener famosos por ciudad', error: error.message });
+    }
+};
+
+// Obtener famosos por país
+const obtenerFamososPorPais = async (req, res) => {
+    try {
+        const { idPais } = req.params;
+        // Busca todas las ciudades del país
+        const ciudades = await Ciudad.find({ pais: idPais }).select('_id');
+        const ciudadesIds = ciudades.map(c => c._id);
+        // Busca famosos cuya ciudad esté en esas ciudades
+        const famosos = await Famoso.find({ ciudad: { $in: ciudadesIds } })
+            .populate({
+                path: 'ciudad',
+                populate: { path: 'pais', select: 'nombre codigo continente' }
+            });
+        res.json(famosos);
+    } catch (error) {
+        res.status(500).json({ msg: 'Error al obtener famosos por país', error: error.message });
+    }
+};
+
 // Actualizar un famoso
 const actualizarFamoso = async (req, res) => {
     try {
@@ -98,5 +133,7 @@ module.exports = {
     obtenerFamosos,
     obtenerFamoso,
     actualizarFamoso,
-    eliminarFamoso
+    eliminarFamoso,
+    obtenerFamososPorCiudad,
+    obtenerFamososPorPais
 };

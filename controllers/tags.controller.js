@@ -1,4 +1,5 @@
 const Tag = require('../models/tags.model');
+const Ciudad = require('../models/ciudades.model');
 
 // Crear un tag
 const crearTag = async (req, res) => {
@@ -35,6 +36,32 @@ const obtenerTag = async (req, res) => {
             return res.status(404).json({ message: 'Tag no encontrado' });
         }
         res.status(200).json(tag);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Obtener tags por ciudad
+const obtenerTagsPorCiudad = async (req, res) => {
+    try {
+        const { idCiudad } = req.params;
+        const tags = await Tag.find({ ciudad: idCiudad });
+        res.status(200).json(tags);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Obtener tags por país
+const obtenerTagsPorPais = async (req, res) => {
+    try {
+        const { idPais } = req.params;
+        // Busca todas las ciudades del país
+        const ciudades = await Ciudad.find({ pais: idPais }).select('_id');
+        const ciudadesIds = ciudades.map(c => c._id);
+        // Busca tags cuya ciudad esté en esas ciudades
+        const tags = await Tag.find({ ciudad: { $in: ciudadesIds } });
+        res.status(200).json(tags);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -83,5 +110,7 @@ module.exports = {
     obtenerTags,
     obtenerTag,
     actualizarTag,
-    eliminarTag
+    eliminarTag,
+    obtenerTagsPorCiudad,
+    obtenerTagsPorPais
 };

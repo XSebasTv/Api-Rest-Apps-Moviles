@@ -1,4 +1,5 @@
 const Sitio = require('../models/sitios.model');
+const Ciudad = require('../models/ciudades.model');
 
 // Crear un sitio
 const crearSitio = async (req, res) => {
@@ -38,6 +39,32 @@ const obtenerSitio = async (req, res) => {
             return res.status(404).json({ message: 'Sitio no encontrado' });
         }
         res.status(200).json(sitio);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Obtener sitios por ciudad
+const obtenerSitiosPorCiudad = async (req, res) => {
+    try {
+        const { idCiudad } = req.params;
+        const sitios = await Sitio.find({ ciudad: idCiudad });
+        res.status(200).json(sitios);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Obtener sitios por país
+const obtenerSitiosPorPais = async (req, res) => {
+    try {
+        const { idPais } = req.params;
+        // Busca todas las ciudades del país
+        const ciudades = await Ciudad.find({ pais: idPais }).select('_id');
+        const ciudadesIds = ciudades.map(c => c._id.toString());
+        // Busca sitios cuya ciudad esté en esas ciudades
+        const sitios = await Sitio.find({ ciudad: { $in: ciudadesIds } });
+        res.status(200).json(sitios);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -87,5 +114,7 @@ module.exports = {
     obtenerSitios,
     obtenerSitio,
     actualizarSitio,
-    eliminarSitio
+    eliminarSitio,
+    obtenerSitiosPorCiudad,
+    obtenerSitiosPorPais
 };

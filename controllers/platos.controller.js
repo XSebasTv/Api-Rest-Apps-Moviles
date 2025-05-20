@@ -1,4 +1,5 @@
 const Plato = require('../models/platos.model');
+const Ciudad = require('../models/ciudades.model');
 
 // Crear un nuevo plato
 const crearPlato = async (req, res) => {
@@ -35,6 +36,32 @@ const obtenerPlato = async (req, res) => {
             return res.status(404).json({ message: 'Plato no encontrado' });
         }
         res.status(200).json(plato);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Obtener platos por ciudad
+const obtenerPlatosPorCiudad = async (req, res) => {
+    try {
+        const { idCiudad } = req.params;
+        const platos = await Plato.find({ ciudad: idCiudad });
+        res.status(200).json(platos);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Obtener platos por país
+const obtenerPlatosPorPais = async (req, res) => {
+    try {
+        const { idPais } = req.params;
+        // Busca todas las ciudades del país
+        const ciudades = await Ciudad.find({ pais: idPais }).select('_id');
+        const ciudadesIds = ciudades.map(c => c._id);
+        // Busca platos cuya ciudad esté en esas ciudades
+        const platos = await Plato.find({ ciudad: { $in: ciudadesIds } });
+        res.status(200).json(platos);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -83,5 +110,7 @@ module.exports = {
     obtenerPlatos,
     obtenerPlato,
     actualizarPlato,
-    eliminarPlato
+    eliminarPlato,
+    obtenerPlatosPorCiudad,
+    obtenerPlatosPorPais
 };
