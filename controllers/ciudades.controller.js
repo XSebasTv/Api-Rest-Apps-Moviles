@@ -10,6 +10,17 @@ const obtenerCiudades = async (req, res) => {
     }
 };
 
+// Obtener ciudades por país
+const obtenerCiudadesPorPais = async (req, res) => {
+    const { id } = req.params; // id del país
+    try {
+        const ciudades = await Ciudad.find({ pais: id }).populate('pais', 'nombre codigo continente');
+        res.json(ciudades);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener las ciudades del país', error: error.message });
+    }
+};
+
 // Obtener una ciudad por ID (con país)
 const obtenerCiudad = async (req, res) => {
     const { id } = req.params;
@@ -86,6 +97,7 @@ const eliminarCiudad = async (req, res) => {
 
 module.exports = {
     obtenerCiudades,
+    obtenerCiudadesPorPais,
     obtenerCiudad,
     crearCiudad,
     actualizarCiudad,
