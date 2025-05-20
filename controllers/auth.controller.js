@@ -5,14 +5,14 @@ const { generarJWT } = require("../helpers/generar-jwt");
 
 // LOGIN
 const login = async (req, res = response) => {
-    const { email, password } = req.body;
+    const { correo, password } = req.body; // Cambiado a 'correo'
 
     try {
-        const usuario = await Usuario.findOne({ email });
+        const usuario = await Usuario.findOne({ correo }); // Cambiado a 'correo'
         if (!usuario) {
             return res.status(400).json({
                 ok: false,
-                msg: "Usuario / Password no son correctos - email",
+                msg: "Usuario / Password no son correctos - correo",
             });
         }
 
@@ -55,16 +55,16 @@ const login = async (req, res = response) => {
 // REGISTER
 const register = async (req, res) => {
     try {
-        const { nombre, correo, password, rol } = req.body; // <-- CAMBIA email por correo
+        const { nombre, correo, password, rol } = req.body;
 
         // Verificar si el correo ya existe
-        const existeUsuario = await Usuario.findOne({ correo }); // <-- CAMBIA email por correo
+        const existeUsuario = await Usuario.findOne({ correo });
         if (existeUsuario) {
             return res.status(400).json({ msg: 'El correo ya está registrado' });
         }
 
         // Crear usuario
-        const usuario = new Usuario({ nombre, correo, password, rol }); // <-- CAMBIA email por correo
+        const usuario = new Usuario({ nombre, correo, password, rol });
 
         // Encriptar contraseña
         const salt = bcryptjs.genSaltSync();
@@ -86,6 +86,7 @@ const register = async (req, res) => {
         res.status(500).json({ msg: 'Error al registrar usuario', error: error.message });
     }
 };
+
 module.exports = {
     login,
     register
